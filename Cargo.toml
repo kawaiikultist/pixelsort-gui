@@ -1,0 +1,3 @@
+[workspace]
+resolver = "3"
+members = ["pixelsort_rs", "ps_gui"]
