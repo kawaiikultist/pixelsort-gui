@@ -42,9 +42,13 @@ impl Interval {
             }
         });
 
-        if reverse { self.colors.reverse(); }
+        // Interval is actually reversed by default because the lowest key is first.
+        if !reverse { self.colors.reverse(); }
     }
 
+    pub(crate) fn reverse(&mut self) {
+        self.positions.reverse();
+    }
     
     pub(crate) fn get_indexed_pixels(&mut self) -> Vec<IndexedPixel> {
         assert_eq!(self.positions.len(), self.colors.len());

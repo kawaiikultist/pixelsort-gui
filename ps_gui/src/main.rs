@@ -6,10 +6,15 @@ fn main() {
         .to_rgb8();
 
     let pxsort = Pixelsorter::new(
-        image, 0.0, SortKey::Luma, SortPath::Linear, false
+        image,
+        f64::to_radians(180.0),
+        SortKey::Luma,
+        SortPath::Linear,
+        false
     );
 
     let output = pxsort.get_sorted_image();
-    output.save("imgs/output.png")
+    output.save("imgs/linear.png")
         .expect("Could not save output!");
+    println!("Image exported!");
 }

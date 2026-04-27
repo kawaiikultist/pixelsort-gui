@@ -6,7 +6,7 @@ mod paths;
 
 use image::{ImageBuffer, Rgb};
 use crate::{
-    paths::{LinearPath, Path}, 
+    paths::Path,
     types::{SortKey, SortPath}
 };
 
@@ -40,15 +40,15 @@ impl Pixelsorter {
     }
 
 
-    pub fn new_linear(image: ImageBuffer<Rgb<u8>, Vec<u8>>, angle: f64, reverse: bool) -> Self {
-        Self {
-            image,
-            angle,
-            key: SortKey::Luma,
-            path: Box::new(LinearPath::new()),
-            reverse,
-        }
-    }
+    // pub fn new_linear(image: ImageBuffer<Rgb<u8>, Vec<u8>>, angle: f64, reverse: bool) -> Self {
+    //     Self {
+    //         image,
+    //         angle,
+    //         key: SortKey::Luma,
+    //         path: Box::new(LinearPath::new()),
+    //         reverse,
+    //     }
+    // }
 
     pub fn get_sorted_image(&self) -> ImageBuffer<Rgb<u8>, Vec<u8>> {
         let mut intervals = self.path.get_intervals(&self.image, self.angle);

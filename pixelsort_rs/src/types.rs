@@ -1,3 +1,4 @@
+
 // ┌─────────────────────────────────────────────────────────────────────────────┐
 // │                                    Vec2                                     │
 // └─────────────────────────────────────────────────────────────────────────────┘
@@ -43,6 +44,16 @@ impl Vec2 {
             x: self.x.clamp(min.x, max.x),
             y: self.y.clamp(min.y, max.y),
         }
+    }
+
+
+    pub fn distance_to_squared(&self, other: Vec2) -> f64 {
+        (other.x - self.x).powi(2) + (other.y - self.y).powi(2)
+    }
+
+    
+    pub fn direction_to(&self, other: Vec2) -> Vec2 {
+        Vec2::new(other.x - self.x, other.y - self.y).normalize_or_zero()
     }
 }
 
@@ -90,14 +101,14 @@ pub enum SortKey {
 #[derive(Clone, Copy)]
 pub enum SortPath {
     Linear,
-    Radial { offset: Vec2 }
+    Radial { x_offset: u32, y_offset: u32 },
 }
 
 impl SortPath {
     pub(crate) fn get_path(&self) -> Box<dyn crate::Path> {
         match self {
-            Self::Linear => { Box::new(crate::LinearPath::new()) },
-            Self::Radial { offset } => { todo!("Implement radial sorting. Offset: {:?}", offset) },
+            Self::Linear => { Box::new(crate::paths::LinearPath::new()) },
+            Self::Radial { x_offset, y_offset } => { Box::new(crate::paths::RadialPath::new(*x_offset, *y_offset)) },
         }
     }
 }
