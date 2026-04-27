@@ -1,7 +1,6 @@
 use image::{Pixel, Rgb};
 use crate::types::{IndexedPixel, SortKey};
 
-#[derive(Clone)]
 pub(crate) struct Interval {
     positions: Vec<[u32; 2]>,
     colors: Vec<Rgb<u8>>,
@@ -23,10 +22,6 @@ impl Interval {
     }
 
 
-    // pub(crate) fn pop (&mut self) -> (Option<[u32; 2]>, Option<Rgb<u8>>) {
-    //     (  self.positions.pop(), self.colors.pop()  )
-    // }
-
     pub(crate) fn get_last_position(&self) -> Option<&[u32; 2]> {
         self.positions.last()
     }
@@ -46,10 +41,12 @@ impl Interval {
         if !reverse { self.colors.reverse(); }
     }
 
+
     pub(crate) fn reverse(&mut self) {
         self.positions.reverse();
     }
-    
+
+
     pub(crate) fn get_indexed_pixels(&mut self) -> Vec<IndexedPixel> {
         assert_eq!(self.positions.len(), self.colors.len());
 

@@ -102,6 +102,7 @@ pub enum SortKey {
 pub enum SortPath {
     Linear,
     Radial { x_offset: u32, y_offset: u32 },
+    Blocks { x_size: u32, y_size: u32 },
 }
 
 impl SortPath {
@@ -109,6 +110,7 @@ impl SortPath {
         match self {
             Self::Linear => { Box::new(crate::paths::LinearPath::new()) },
             Self::Radial { x_offset, y_offset } => { Box::new(crate::paths::RadialPath::new(*x_offset, *y_offset)) },
+            Self::Blocks { x_size, y_size } => { Box::new(crate::paths::BlockPath::new(*x_size, *y_size)) },
         }
     }
 }
