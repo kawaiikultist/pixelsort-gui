@@ -25,25 +25,27 @@ pub struct Pixelsorter {
     key: SortKey,
     path: Box<dyn Path>,
     reverse: bool,
+    threshold: types::Threshold,
 }
 
 
 impl Pixelsorter {
-    pub fn new(image: ImageBuffer<Rgb<u8>, Vec<u8>>, angle: f64, key: SortKey, path_type: SortPath, reverse: bool) -> Self {
+    pub fn new(image: ImageBuffer<Rgb<u8>, Vec<u8>>, angle: f64, key: SortKey, path_type: SortPath, reverse: bool, threshold: types::Threshold) -> Self {
         Self {
             image,
             angle,
             key,
             path: path_type.get_path(),
             reverse,
+            threshold,
         }
     }
 
 
     pub fn get_sorted_image(&self) -> ImageBuffer<Rgb<u8>, Vec<u8>> {
-        let mut intervals = self.path.get_intervals(&self.image, self.angle);
+        let mut intervals = self.path.get_intervals(&self.image, self.angle, self.threshold);
 
-        let mut output = ImageBuffer::<Rgb<u8>, Vec<u8>>::new(self.image.width(), self.image.height());
+        let mut output = self.image.clone();
  
         for intvl in &mut intervals {
             intvl.sort(self.key, self.reverse);

@@ -1,3 +1,5 @@
+use image::Pixel;
+
 
 // ┌─────────────────────────────────────────────────────────────────────────────┐
 // │                                    Vec2                                     │
@@ -101,7 +103,7 @@ pub enum SortKey {
 #[derive(Clone, Copy)]
 pub enum SortPath {
     Linear,
-    Radial { x_offset: u32, y_offset: u32 },
+    Radial { x_offset: i32, y_offset: i32 },
     Blocks { x_size: u32, y_size: u32 },
 }
 
@@ -124,4 +126,56 @@ impl SortPath {
 pub(crate) struct IndexedPixel {
     pub(crate) position: [u32; 2],
     pub(crate) color: image::Rgb<u8>,
+}
+
+
+
+
+// ┌─────────────────────────────────────────────────────────────────────────────┐
+// │                                 Pixel Color                                 │
+// └─────────────────────────────────────────────────────────────────────────────┘
+pub struct PixelColor(pub image::Rgb<u8>);
+
+
+impl PixelColor {
+    pub(crate) fn get_key_value(&self, key: SortKey) -> u8 {
+        match key {
+            SortKey::Luma => { self.0.to_luma().0[0] },
+            SortKey::Red => { self.0[0] },
+            SortKey::Green => { self.0[1] },
+            SortKey::Blue => { self.0[2] },
+        }
+    }
+}
+
+
+
+// ┌─────────────────────────────────────────────────────────────────────────────┐
+// │                                  Threshold                                  │
+// └─────────────────────────────────────────────────────────────────────────────┘
+#[derive(Copy, Clone)]
+pub struct Threshold {
+    min: u8,
+    max: u8,
+    key: SortKey,
+    invert: bool,
+}
+
+
+impl Threshold {
+    pub fn new(min_pct: f64, max_pct: f64, key: SortKey, invert: bool) -> Self {
+        Self {
+            min: (min_pct * 255.0) as u8,
+            max: (max_pct * 255.0) as u8,
+            key, invert
+        }
+    }
+
+
+    pub fn pixel_in_range(&self, px: &PixelColor) -> bool {
+        let v = px.get_key_value(self.key);
+
+        if self.invert { v != v.clamp(self.min, self.max) }
+        else { v == v.clamp(self.min, self.max) }
+    }
 }

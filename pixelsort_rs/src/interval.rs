@@ -1,9 +1,9 @@
-use image::{Pixel, Rgb};
-use crate::types::{IndexedPixel, SortKey};
+use image::Rgb;
+use crate::types::{IndexedPixel, SortKey, PixelColor};
 
 pub(crate) struct Interval {
     positions: Vec<[u32; 2]>,
-    colors: Vec<Rgb<u8>>,
+    colors: Vec<PixelColor>,
 }
 
 
@@ -16,7 +16,17 @@ impl Interval {
     }
 
 
-    pub(crate) fn push(&mut self, pos: [u32; 2], pixel: Rgb<u8>) {
+    pub(crate) fn is_empty(&self) -> bool {
+        assert_eq!(self.colors.len(), self.positions.len());
+        self.colors.len() == 0
+    }
+
+    pub(crate) fn len(&self) -> usize {
+        self.colors.len()
+    }
+
+
+    pub(crate) fn push(&mut self, pos: [u32; 2], pixel: PixelColor) {
         self.positions.push(pos);
         self.colors.push(pixel);
     }
@@ -28,22 +38,10 @@ impl Interval {
 
 
     pub(crate) fn sort(&mut self, key: SortKey, reverse: bool) {
-        self.colors.sort_unstable_by_key(|px| {
-            match key {
-                SortKey::Luma => { px.to_luma()[0] },
-                SortKey::Red => { px[0] },
-                SortKey::Green => { px[1] },
-                SortKey::Blue => { px[2] },
-            }
-        });
+        self.colors.sort_unstable_by_key(|px| px.get_key_value(key));
 
         // Interval is actually reversed by default because the lowest key is first.
         if !reverse { self.colors.reverse(); }
-    }
-
-
-    pub(crate) fn reverse(&mut self) {
-        self.positions.reverse();
     }
 
 
@@ -54,7 +52,7 @@ impl Interval {
         for i in 0..self.colors.len() {
             pixels.push(IndexedPixel {
                 position: self.positions[i],
-                color: self.colors[i],
+                color: self.colors[i].0,
             });
         }
 
