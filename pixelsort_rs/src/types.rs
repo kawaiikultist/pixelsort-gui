@@ -108,7 +108,7 @@ pub enum SortPath {
 }
 
 impl SortPath {
-    pub(crate) fn get_path(&self) -> Box<dyn crate::Path> {
+    pub(crate) fn get_path(&self) -> Box<dyn crate::paths::Path> {
         match self {
             Self::Linear => { Box::new(crate::paths::LinearPath::new()) },
             Self::Radial { x_offset, y_offset } => { Box::new(crate::paths::RadialPath::new(*x_offset, *y_offset)) },

@@ -6,14 +6,15 @@ A pixel sorting tool written in Rust. Sorts pixels in an image along configurabl
 
 - Sort pixels by luminance, red, green, or blue channel
 - Configurable sort angle
-- Forward or reverse sort order
-- Linear pixel sorting
+- Define thresholds to target certain pixels (ex: sort pixels with luma between 0 and 150)
+- Reversible sorting
+- Standard sorting paths like Linear & Radial
+- Unique sorting paths like Blocks (more to come)
 
 ### Planned
 
 - Additional sorting paths (radial, wave, etc)
 - Additional sorting keys (hue, saturation, etc)
-- Thresholds (ex: Sort only pixels with a luma between X & Y)
 - Additional sort keys (hue, saturation, etc)
 - GUI
 
@@ -27,20 +28,28 @@ This is a Cargo workspace with two crates:
 ## Usage
 
 ```rust
-use pixelsort::{Pixelsorter, types::{SortKey, SortPath}};
+use pixelsort::prelude::*;
 
-let image = pixelsort::open("input.png").unwrap().to_rgb8();
+fn main() {
+    let image = pixelsort::open("path/to/file.png")
+        .expect("Could not open image!")
+        .to_rgb8();
 
-let sorter = Pixelsorter::new(
-    image,
-    0.0,          // angle in radians
-    SortKey::Luma,
-    SortPath::Linear,
-    false,        // reverse
-);
 
-let output = sorter.get_sorted_image();
-output.save("output.png").unwrap();
+    let pxsorter = Pixelsorter::new(
+        image,
+        f64::to_radians(0.0),
+        SortKey::Luma,
+        SortPath::Radial { x_offset: 0, y_offset: -150 },
+        false,
+        Threshold::new(0.0, 0.5, SortKey::Luma, false),
+    );
+
+    let output = pxsorter.get_sorted_image();
+    output.save("imgs/threshold_test.png")
+        .expect("Could not save output!");
+    println!("Image exported!");
+}
 ```
 
 ## Building
