@@ -1,5 +1,5 @@
 
-use image::{ImageBuffer, Rgb};
+use image::{DynamicImage, ImageBuffer, Rgba};
 use crate::{
     paths::Path,
     types::{SortKey, SortPath, Threshold}
@@ -9,7 +9,7 @@ use crate::{
 // │                                 Pixelsorter                                 │
 // └─────────────────────────────────────────────────────────────────────────────┘
 pub struct Pixelsorter {
-    image: ImageBuffer<Rgb<u8>, Vec<u8>>,
+    image: ImageBuffer<Rgba<u8>, Vec<u8>>,
     angle: f64,
     key: SortKey,
     path: Box<dyn Path>,
@@ -19,9 +19,9 @@ pub struct Pixelsorter {
 
 
 impl Pixelsorter {
-    pub fn new(image: ImageBuffer<Rgb<u8>, Vec<u8>>) -> Self {
+    pub fn new(image: DynamicImage) -> Self {
         Self {
-            image,
+            image: image.to_rgba8(),
             angle: 0.0,
             key: SortKey::Luma,
             path: Box::new(crate::paths::LinearPath::new()),
@@ -61,7 +61,7 @@ impl Pixelsorter {
     }
 
 
-    pub fn run(&self) -> ImageBuffer<Rgb<u8>, Vec<u8>> {
+    pub fn run(&self) -> DynamicImage {//-> ImageBuffer<Rgba<u8>, Vec<u8>> {
         let mut intervals = self.path.get_intervals(&self.image, self.angle, self.threshold);
         let mut output = self.image.clone();
 
@@ -73,9 +73,11 @@ impl Pixelsorter {
             }
         }
 
-        output
+        DynamicImage::ImageRgba8(output)
+
+        // output
     } 
-    // pub fn new(image: ImageBuffer<Rgb<u8>, Vec<u8>>, angle: f64, key: SortKey, path_type: SortPath, reverse: bool, threshold: Threshold) -> Self {
+    // pub fn new(image: ImageBuffer<Rgba<u8>, Vec<u8>>, angle: f64, key: SortKey, path_type: SortPath, reverse: bool, threshold: Threshold) -> Self {
     //     Self {
     //         image,
     //         angle,
@@ -87,7 +89,7 @@ impl Pixelsorter {
     // }
     //
     //
-    // pub fn get_sorted_image(&self) -> ImageBuffer<Rgb<u8>, Vec<u8>> {
+    // pub fn get_sorted_image(&self) -> ImageBuffer<Rgba<u8>, Vec<u8>> {
     //     let mut intervals = self.path.get_intervals(&self.image, self.angle, self.threshold);
     //
     //     let mut output = self.image.clone();

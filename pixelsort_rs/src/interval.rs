@@ -1,4 +1,3 @@
-use image::Rgb;
 use crate::types::{IndexedPixel, SortKey, PixelColor};
 
 pub(crate) struct Interval {
@@ -19,10 +18,6 @@ impl Interval {
     pub(crate) fn is_empty(&self) -> bool {
         assert_eq!(self.colors.len(), self.positions.len());
         self.colors.len() == 0
-    }
-
-    pub(crate) fn len(&self) -> usize {
-        self.colors.len()
     }
 
 

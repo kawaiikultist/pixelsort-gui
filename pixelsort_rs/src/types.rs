@@ -89,9 +89,13 @@ impl std::ops::Sub for Vec2 {
 // ┌─────────────────────────────────────────────────────────────────────────────┐
 // │                                  Sort Key                                   │
 // └─────────────────────────────────────────────────────────────────────────────┘
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Default)]
 pub enum SortKey {
-    Luma, Red, Green, Blue
+    #[default]
+    Luma,
+    Red,
+    Green,
+    Blue
 }
 
 
@@ -100,8 +104,9 @@ pub enum SortKey {
 // ┌─────────────────────────────────────────────────────────────────────────────┐
 // │                                  Sort Path                                  │
 // └─────────────────────────────────────────────────────────────────────────────┘
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Default)]
 pub enum SortPath {
+    #[default]
     Linear,
     Radial { x_offset: i32, y_offset: i32 },
     Blocks { x_size: u32, y_size: u32 },
@@ -125,7 +130,7 @@ impl SortPath {
 // └─────────────────────────────────────────────────────────────────────────────┘
 pub(crate) struct IndexedPixel {
     pub(crate) position: [u32; 2],
-    pub(crate) color: image::Rgb<u8>,
+    pub(crate) color: image::Rgba<u8>,
 }
 
 
@@ -134,7 +139,7 @@ pub(crate) struct IndexedPixel {
 // ┌─────────────────────────────────────────────────────────────────────────────┐
 // │                                 Pixel Color                                 │
 // └─────────────────────────────────────────────────────────────────────────────┘
-pub struct PixelColor(pub image::Rgb<u8>);
+pub struct PixelColor(pub image::Rgba<u8>);
 
 
 impl PixelColor {
