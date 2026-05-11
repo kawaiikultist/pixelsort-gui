@@ -2,6 +2,7 @@ use pixelsort::prelude::{SortKey, SortPath};
 
 #[derive(Clone, Copy)]
 pub enum Message {
+    Interface(InterfaceMessage),
     File(FileMessage),
     Param(ParamMessage),
     Sort(SortMessage),
@@ -15,7 +16,7 @@ pub enum FileMessage {
 
 #[derive(Clone, Copy)]
 pub enum ParamMessage {
-    AngleChanged(f64),
+    AngleChanged(f32),
     SortKeyChanged(SortKey),
     SortPathChanged(SortPath),
     ReverseToggled(bool),
@@ -26,4 +27,10 @@ pub enum ParamMessage {
 #[derive(Clone, Copy)]
 pub enum SortMessage {
     Run,
+}
+
+
+#[derive(Clone, Copy)]
+pub enum InterfaceMessage {
+    PaneResized(iced::widget::pane_grid::ResizeEvent),
 }

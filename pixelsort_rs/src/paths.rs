@@ -1,4 +1,5 @@
 use std::io::Write;
+use rayon::prelude::*;
 
 use image::{
     ImageBuffer,
@@ -69,11 +70,12 @@ impl Path for LinearPath {
     // │ of angle until the current pixel is out of bounds.                          │
     // └                                                                             ┘
     fn get_intervals(&self, image: &ImageBuffer<Rgba<u8>, Vec<u8>>, angle: f64, threshold: Threshold) -> Vec<Interval> {
-        let mut intervals: Vec<Interval> = Vec::new();
+        // let mut intervals: Vec<Interval> = Vec::new();
         let direction = Vec2::new_from_angle(angle);
         let start_pixels = self.get_edge_pixels(image.width(), image.height(), Some(&direction));
 
-        for start_px in &start_pixels {
+        let intervals: Vec<Interval> = start_pixels.par_iter().flat_map(|start_px| {
+            let mut local_intervals: Vec<Interval> = Vec::new();
             let mut intvl = Interval::new_empty();
             let mut px = Vec2::new(start_px[0] as f64, start_px[1] as f64);
 
@@ -87,19 +89,49 @@ impl Path for LinearPath {
                     if threshold.pixel_in_range(&pxc) {
                         intvl.push(pxi, pxc);
                     } else if !intvl.is_empty() {
-                        intervals.push(intvl);
+                        local_intervals.push(intvl);
                         intvl = Interval::new_empty();
-                        self.print_progress(intervals.len());
                     }
                 }
             }
-            
-            intervals.push(intvl);
-            self.print_progress(intervals.len());
-        }
 
-        println!(" . . . . . . . . DONE");
+            local_intervals.push(intvl);
+            local_intervals
+        }).collect();
+
+
         intervals
+
+
+
+        // let mut intervals: Vec<Interval> = Vec::new();
+        // for start_px in &start_pixels {
+        //     let mut intvl = Interval::new_empty();
+        //     let mut px = Vec2::new(start_px[0] as f64, start_px[1] as f64);
+        //
+        //     while px == px.clamped(Vec2::ZERO, Vec2::new(image.width() as f64 - 1.0, image.height() as f64 - 1.0)) {
+        //         let pxi: [u32; 2] = [px.x.round() as u32, px.y.round() as u32];
+        //
+        //         px += direction;
+        //
+        //         if intvl.get_last_position() != Some(&pxi) {
+        //             let pxc = PixelColor(*image.get_pixel(pxi[0], pxi[1]));
+        //             if threshold.pixel_in_range(&pxc) {
+        //                 intvl.push(pxi, pxc);
+        //             } else if !intvl.is_empty() {
+        //                 intervals.push(intvl);
+        //                 intvl = Interval::new_empty();
+        //                 self.print_progress(intervals.len());
+        //             }
+        //         }
+        //     }
+        //
+        //     intervals.push(intvl);
+        //     self.print_progress(intervals.len());
+        // }
+        //
+        // println!(" . . . . . . . . DONE");
+        // intervals
     }
 }
 
@@ -128,16 +160,17 @@ impl Path for RadialPath {
     // │ the ray goes out of bounds.                                                 │
     // └                                                                             ┘
     fn get_intervals(&self, image: &ImageBuffer<Rgba<u8>, Vec<u8>>, _angle: f64, threshold: Threshold) -> Vec<Interval> {
-        let mut intervals: Vec<Interval> = Vec::new();
         let edge_pixels = self.get_edge_pixels(image.width(), image.height(), None);
         let image_center = Vec2::new(
             (image.width() as i32 / 2 + self.x_offset) as f64,
             (image.height() as i32 / 2 + self.y_offset) as f64
         );
 
-        for edge_px in &edge_pixels {
+        let intervals: Vec<Interval> = edge_pixels.par_iter().flat_map(|edge_px| {
+            let mut local_intervals: Vec<Interval> = Vec::new();
             let mut intvl = Interval::new_empty();
             let mut px = Vec2::new(image_center.x, image_center.y);
+
             let edge_pxv = Vec2::new(edge_px[0] as f64, edge_px[1] as f64);
             let dir = image_center.direction_to(edge_pxv);
 
@@ -151,18 +184,47 @@ impl Path for RadialPath {
                 if threshold.pixel_in_range(&pxc) {
                     intvl.push(pxi, pxc);
                 } else if !intvl.is_empty() {
-                    intervals.push(intvl);
+                    local_intervals.push(intvl);
                     intvl = Interval::new_empty();
-                    self.print_progress(intervals.len());
+                    // self.print_progress(intervals.len());
                 }
             }
 
-            intervals.push(intvl);
-            self.print_progress(intervals.len());
-        }
+            local_intervals.push(intvl);
+            local_intervals
+        }).collect();
 
-        println!(" . . . . . . . . DONE");
         intervals
+
+        // let mut intervals: Vec<Interval> = Vec::new();
+        // for edge_px in &edge_pixels {
+        //     let mut intvl = Interval::new_empty();
+        //     let mut px = Vec2::new(image_center.x, image_center.y);
+        //     let edge_pxv = Vec2::new(edge_px[0] as f64, edge_px[1] as f64);
+        //     let dir = image_center.direction_to(edge_pxv);
+        //
+        //     while px.distance_to_squared(edge_pxv) > 1.0 {
+        //         let pxi: [u32; 2] = [px.x.round() as u32, px.y.round() as u32];
+        //
+        //         px += dir;
+        //
+        //         if intvl.get_last_position() == Some(&pxi) { continue; }
+        //         let pxc = PixelColor(*image.get_pixel(pxi[0], pxi[1]));
+        //         if threshold.pixel_in_range(&pxc) {
+        //             intvl.push(pxi, pxc);
+        //         } else if !intvl.is_empty() {
+        //             intervals.push(intvl);
+        //             intvl = Interval::new_empty();
+        //             self.print_progress(intervals.len());
+        //         }
+        //     }
+        //
+        //     intervals.push(intvl);
+        //     self.print_progress(intervals.len());
+        // }
+        //
+        // println!(" . . . . . . . . DONE");
+        // intervals
     }
 }
 
@@ -201,7 +263,6 @@ impl Path for BlockPath {
 // └                                                                             ┘
     // TODO: Making this affected by angle would be really cool
     fn get_intervals(&self, image: &ImageBuffer<Rgba<u8>, Vec<u8>>, _angle: f64, threshold: Threshold) -> Vec<Interval> {
-        let mut intervals: Vec<Interval> = Vec::new();
 
         // Get number of blocks needed to cover the screen
         let block_count: [u32; 2] = [
@@ -209,60 +270,119 @@ impl Path for BlockPath {
             (image.height() as f32 / self.y_size as f32).ceil() as u32,
         ];
 
-        // Block
-        for bx in 0..=block_count[0] {
-            for by in 0..=block_count[1] {
-                let offset = [bx * self.x_size, by * self.y_size];
-                let bx_even = bx.is_multiple_of(2);
-                let by_even = by.is_multiple_of(2);
+        let block_pairs: Vec<(u32, u32)> = (0..=block_count[0])
+          .flat_map(|bx| (0..=block_count[1]).map(move |by| (bx, by)))
+          .collect();
 
-                let flip_x = bx_even && by_even;
-                let flip_y = !bx_even && by_even;
-                // True when bx_even XOR by_even.
-                let outer_is_x = bx_even ^ by_even;
+        let intervals: Vec<Interval> = block_pairs.par_iter().flat_map(|(bx, by)| {
+            let mut local_intervals: Vec<Interval> = Vec::new();
+            let offset = [bx * self.x_size, by * self.y_size];
+            let bx_even = bx.is_multiple_of(2);
+            let by_even = by.is_multiple_of(2);
 
-                let x_range: Vec<u32> = (0..=self.x_size).collect();
-                let y_range: Vec<u32> = (0..=self.y_size).collect();
+            let flip_x = bx_even && by_even;
+            let flip_y = !bx_even && by_even;
+            // True when bx_even XOR by_even.
+            let outer_is_x = bx_even ^ by_even;
 
-                let get_x = |x: u32| offset[0] + if flip_x { self.x_size - x } else { x };
-                let get_y = |y: u32| offset[1] + if flip_y { self.y_size - y } else { y };
+            let x_range: Vec<u32> = (0..=self.x_size).collect();
+            let y_range: Vec<u32> = (0..=self.y_size).collect();
 
-                let (outer, inner) = if outer_is_x {
-                    (&x_range, &y_range)
-                } else {
-                    (&y_range, &x_range)
-                };
+            let get_x = |x: u32| offset[0] + if flip_x { self.x_size - x } else { x };
+            let get_y = |y: u32| offset[1] + if flip_y { self.y_size - y } else { y };
 
-                for &o in outer {
-                    let mut intvl = Interval::new_empty();
-                    for &i in inner {
-                        let pxi = if outer_is_x {
-                            [get_x(o), get_y(i)]
-                        } else {
-                            [get_x(i), get_y(o)]
-                        };
+            let (outer, inner) = if outer_is_x {
+                (&x_range, &y_range)
+            } else {
+                (&y_range, &x_range)
+            };
 
-                        if !(pxi[0] < image.width() && pxi[1] < image.height()) { continue; }
+            for &o in outer {
+                let mut intvl = Interval::new_empty();
+                for &i in inner {
+                    let pxi = if outer_is_x {
+                        [get_x(o), get_y(i)]
+                    } else {
+                        [get_x(i), get_y(o)]
+                    };
 
-                        if intvl.get_last_position() != Some(&pxi) {
-                            let pxc = PixelColor(*image.get_pixel(pxi[0], pxi[1]));
-                            if threshold.pixel_in_range(&pxc) {
-                                intvl.push(pxi, pxc);
-                            } else if !intvl.is_empty() {
-                                intervals.push(intvl);
-                                intvl = Interval::new_empty();
-                                self.print_progress(intervals.len());
-                            }
+                    if !(pxi[0] < image.width() && pxi[1] < image.height()) { continue; }
+
+                    if intvl.get_last_position() != Some(&pxi) {
+                        let pxc = PixelColor(*image.get_pixel(pxi[0], pxi[1]));
+                        if threshold.pixel_in_range(&pxc) {
+                            intvl.push(pxi, pxc);
+                        } else if !intvl.is_empty() {
+                            local_intervals.push(intvl);
+                            intvl = Interval::new_empty();
                         }
-
                     }
-                    intervals.push(intvl);
-                    self.print_progress(intervals.len());
                 }
-            }
-        }
 
-        println!(" . . . . . . . . DONE");
+                local_intervals.push(intvl);
+            }
+
+            local_intervals
+        }).collect();
+
         intervals
+
+
+        // Block
+        // let mut intervals: Vec<Interval> = Vec::new();
+        // for bx in 0..=block_count[0] {
+        //     for by in 0..=block_count[1] {
+        //         let offset = [bx * self.x_size, by * self.y_size];
+        //         let bx_even = bx.is_multiple_of(2);
+        //         let by_even = by.is_multiple_of(2);
+        //
+        //         let flip_x = bx_even && by_even;
+        //         let flip_y = !bx_even && by_even;
+        //         // True when bx_even XOR by_even.
+        //         let outer_is_x = bx_even ^ by_even;
+        //
+        //         let x_range: Vec<u32> = (0..=self.x_size).collect();
+        //         let y_range: Vec<u32> = (0..=self.y_size).collect();
+        //
+        //         let get_x = |x: u32| offset[0] + if flip_x { self.x_size - x } else { x };
+        //         let get_y = |y: u32| offset[1] + if flip_y { self.y_size - y } else { y };
+        //
+        //         let (outer, inner) = if outer_is_x {
+        //             (&x_range, &y_range)
+        //         } else {
+        //             (&y_range, &x_range)
+        //         };
+        //
+        //         for &o in outer {
+        //             let mut intvl = Interval::new_empty();
+        //             for &i in inner {
+        //                 let pxi = if outer_is_x {
+        //                     [get_x(o), get_y(i)]
+        //                 } else {
+        //                     [get_x(i), get_y(o)]
+        //                 };
+        //
+        //                 if !(pxi[0] < image.width() && pxi[1] < image.height()) { continue; }
+        //
+        //                 if intvl.get_last_position() != Some(&pxi) {
+        //                     let pxc = PixelColor(*image.get_pixel(pxi[0], pxi[1]));
+        //                     if threshold.pixel_in_range(&pxc) {
+        //                         intvl.push(pxi, pxc);
+        //                     } else if !intvl.is_empty() {
+        //                         intervals.push(intvl);
+        //                         intvl = Interval::new_empty();
+        //                         self.print_progress(intervals.len());
+        //                     }
+        //                 }
+        //
+        //             }
+        //             intervals.push(intvl);
+        //             self.print_progress(intervals.len());
+        //         }
+        //     }
+        // }
+        //
+        // println!(" . . . . . . . . DONE");
+        // intervals
     }
 }

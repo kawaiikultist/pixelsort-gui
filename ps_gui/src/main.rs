@@ -2,9 +2,11 @@ use iced::{Task, application};
 use rfd::FileDialog;
 use crate::app::App;
 
-
 mod app;
 mod msgs;
+mod widgets;
+mod styles;
+mod utils;
 
 fn main() -> iced::Result {
     let input_image = {
@@ -16,7 +18,9 @@ fn main() -> iced::Result {
         }
     };
 
+
     application(move || (App::new(input_image.clone()), Task::none()), App::update, App::view)
-        .title("Pixelsorter")
+        .title("KolorSort")
+        .theme(App::THEME)
         .run()
 }
