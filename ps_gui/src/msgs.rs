@@ -2,6 +2,8 @@ use pixelsort::prelude::{SortKey, SortPath};
 
 #[derive(Clone, Copy)]
 pub enum Message {
+    DoNothing,
+
     Interface(InterfaceMessage),
     File(FileMessage),
     Param(ParamMessage),
@@ -11,6 +13,7 @@ pub enum Message {
 
 #[derive(Clone, Copy)]
 pub enum FileMessage {
+    Load,
     Save,
 }
 
